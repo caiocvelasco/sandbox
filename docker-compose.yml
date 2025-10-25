@@ -1,0 +1,14 @@
+# Create the services, i.e., the containers with their specific services inside (postgres, etc)
+services:  
+  postgres:
+    image: postgres:16 # The postgres service is using the "postgres:16" (check in cmd: docker ps)
+    container_name: sandbox_postgres  
+    restart: unless-stopped # Restart policy for the container 
+    env_file:
+      - .env # In case it doesn't work, try this: ./.env
+    ports:
+      - "${POSTGRES_PORT}:5432" # Maps the container's port 5432 to the host machine's port defined in the .env file
+    expose:
+      - "5432" # This makes the PostgreSQL service accessible via localhost:5432 on your local machine. However, within the container environment, services will use the postgres hostname as specified. For example, for PowerBI, Since Docker exposes port 5432 of the PostgreSQL container to port 5432 on your host machine, you connect to localhost:5432 when using PowerBI Desktop on your local machine. 
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data # This volume specifies the postgres storage path inside the container (You told Docker to mount that directory to a folder on your host machine called pgdata)

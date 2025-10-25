@@ -1,0 +1,5 @@
+# Ignore PostgreSQL data directory (this is where the database files are stored)
+pgdata/
+
+# Ignore environment variable files
+.env
