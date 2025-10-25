@@ -6,17 +6,15 @@
 - [Setup Instructions](#setup-instructions)
   - [Prerequisites](#prerequisites)
   - [Build and Run](#build-and-run)
-  - [Connecting with a Database Client (e.g., DBeaver, Power BI, Tableau)](#connecting-with-a-database-client-eg-dbeaver-power-bi-tableau)
 - [Services](#services)
-- [Notes](#notes)
+- [Important Notes](#important-notes)
 
 ---
 
 ## Project Structure
 
 - **name_of_your_project_repo (project-root)/**
-  - **pgdata/** (PostgreSQL data directory — persisted data)
-  - **.env** (Environment variables for PostgreSQL configuration)
+  - **pgdata/** (PostgreSQL data directory - persisted data - this will be created automatically after your first docker compose up command)
   - **.gitignore**
   - **docker-compose.yml**
   - **README.md**
@@ -27,25 +25,11 @@
 
 ### Prerequisites
 
-Make sure you have the following installed on your local development environment:
+Make sure you have the following installed on your local computer:
 
-- [VSCode](https://code.visualstudio.com/): Lightweight but powerful source code editor.
 - [Docker](https://www.docker.com/get-started): Platform for building, sharing, and running containers.
-
-Also include a `.gitignore` file with:  
-- pgdata/ (# Ignore PostgreSQL data directory)
-- .env (# Ignore environment variable files)
-
-**Environment Variables**
-
-Defined in the `.env` file:
-
-```env
-POSTGRES_USER=caio
-POSTGRES_PASSWORD=secret
-POSTGRES_DB=sandbox_db
-POSTGRES_PORT=5432
-```
+- Create a `.gitignore` file in the project root (sandbox/.gitignore) with:  
+  - pgdata/ (# Ignore PostgreSQL data directory)
 
 ---
 
@@ -54,7 +38,7 @@ POSTGRES_PORT=5432
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/caiocvelasco/your_repo.git
+   git clone https://github.com/your_repo/name_your_repo.git
    cd your_repo
    ```
 
@@ -86,10 +70,10 @@ POSTGRES_PORT=5432
 
 4. **Test that PostgreSQL is working:**
 
-  Run a simple version check directly from the container:
+  Run a simple version check directly from the container (change `your_name` and `sandbox_db` if you used different values):
 
    ```bash
-   docker exec sandbox_postgres psql -U caio -d sandbox_db -c "SELECT version();"
+   docker exec sandbox_postgres psql -U your_name -d sandbox_db -c "SELECT version();"
    ```
 
    Expected output (may vary slightly):
@@ -115,13 +99,13 @@ POSTGRES_PORT=5432
 
 To connect to a database using DBaever, use the following connection details:
 
-| DBeaver Field | Value        | Source (.env variable)        |
-| ------------- | ------------ | ----------------------------- |
-| **Host**      | `localhost`  | — (Docker exposes it locally) |
-| **Port**      | `5432`       | `POSTGRES_PORT`               |
-| **Database**  | `sandbox_db` | `POSTGRES_DB`                 |
-| **Username**  | `caio`       | `POSTGRES_USER`               |
-| **Password**  | `...`        | `POSTGRES_PASSWORD`           |
+| DBeaver Field | Value        |
+| ------------- | ------------ |
+| **Host**      | `localhost`  |
+| **Port**      | `5432`       |
+| **Database**  | `sandbox_db` |
+| **Username**  | `your_name`       |
+| **Password**  | `your_password`        |
 
 Go to "Database" > "New Database Connection" in DBeaver and select "PostgreSQL" as the database type. Fill in the connection details as shown above.
 
