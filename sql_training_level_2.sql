@@ -2,178 +2,112 @@
 -- 🧠 LEVEL 3 SQL PRACTICE — WINDOW FUNCTIONS & SUBQUERIES
 -- ===========================================================
 -- Tables:
+--   practice.bookings (with potential duplicates due to ingestion)
 --   practice.bookings_dedup
 --   practice.customers
 -- ===========================================================
 
 
+-- Make sure to select the 'practice@sandbox_db' schema in the dropdown menu at the top of DBeaver's IDE
+
+
 -- 🧩 Exercise 1:
+-- Business question: "How does each individual booking compare to that customer’s total spending?"
 -- For each booking, show:
 --   booking_id, customer_id, booking_date, amount,
---   and total revenue per customer (use a window function).
+--   and total revenue per customer (using a window function).
+--
+-- Goal:
+--   Understand each booking in the context of the customer's total value.
+--   This allows analysts to identify high-value customers or outlier bookings.
+
 
 -- 🧩 Exercise 2:
+-- Business question: "How does each booking compare to that customer’s usual spending behavior?"
 -- For each booking, show:
 --   booking_id, customer_id, amount,
 --   and the average booking amount for that customer.
+--
+-- Goal:
+--   Evaluate whether a booking is above or below a customer’s average.
+--   Useful for detecting high-ticket purchases or behavioral changes.
+
 
 -- 🧩 Exercise 3:
+-- Business question: "How is our confirmed revenue growing as new bookings come in?"
 -- Add a running total of confirmed revenue ordered by booking_date.
+--
+-- Goal:
+--   Track cumulative revenue over time to monitor growth trends.
+--   Useful for dashboards showing revenue progression month-to-date or year-to-date.
+
 
 -- 🧩 Exercise 4:
+-- Business question: "Who are our top customers by total confirmed revenue?"
 -- Rank all customers by total confirmed revenue (1 = highest).
+-- (use ROW_NUMBER or RANK)
+--
+-- Goal:
+--   Identify the most valuable customers overall.
+--   Ranking helps target retention or upsell campaigns.
+
 
 -- 🧩 Exercise 5:
+-- Business question: "Who are our top customers by revenue in each country?"
 -- Within each country, rank customers by total confirmed revenue.
+--
+-- Goal:
+--   Identify top customers by country.
+--   This helps local marketing teams focus on high-value clients in their region.
+
 
 -- 🧩 Exercise 6:
--- For each booking, show its previous and next booking_date
+-- Business question: "How frequently do customers book?"
+-- For each booking, show its previous and next booking_date (by customer_id).
 -- (use LAG and LEAD by customer_id).
+--
+-- Goal:
+--   Calculate booking frequency or inactivity periods between bookings.
+
 
 -- 🧩 Exercise 7:
--- Deduplicate bookings keeping only the latest record per booking_id
--- (use ROW_NUMBER).
+-- Business question: "How do we ensure we only keep the latest version of each booking?"
+-- Deduplicate bookings, keeping only the most recent record per booking_id.
+-- (use ROW_NUMBER)
+--
+-- Goal:
+--   Clean historical data where the same booking_id may appear multiple times due to ETL reloads.
+
 
 -- 🧩 Exercise 8:
+-- Business question: "Which customers are high-value (total confirmed revenue > 400 EUR)?"
 -- Build a subquery that finds each customer's total confirmed revenue,
--- then select only those above 400 EUR.
+-- then filter to only those above 400 EUR.
+--
+-- Goal:
+--   Identify VIP customers for potential loyalty or retention programs.
+
 
 -- 🧩 Exercise 9:
--- Compute average monthly revenue and compare each month's revenue
--- to the overall average (above or below average?).
+-- Business question: "Is each month performing above or below our average revenue?"
+-- Compute average monthly revenue and compare each month's revenue to the overall average using window functions.
+--
+-- Goal:
+--   Detect underperforming months for performance reviews or seasonality analysis.
+
 
 -- 🧩 Exercise 10:
--- Create a final customer leaderboard:
---   customer_id, country, total_bookings, total_revenue,
---   revenue_rank (across all customers).
+-- Business question: "Who are our top customers globally?"
+-- Create a customer leaderboard with:
+--   customer_id, country, total_bookings, total_revenue, revenue_rank (across all customers)
+--
+-- Goal:
+--   Produce a ranked leaderboard of all customers by revenue, to feed dashboards or CRM enrichment.
 
 
--- ===========================================================
--- ✅ LEVEL 3 SQL SOLUTIONS
--- ===========================================================
-
--- ✅ Solution 1
-SELECT
-    booking_id,
-    customer_id,
-    booking_date,
-    amount,
-    SUM(amount) OVER (PARTITION BY customer_id) AS total_revenue_per_customer
-FROM practice.bookings
-ORDER BY customer_id, booking_id;
-
--- ✅ Solution 2
-SELECT
-    booking_id,
-    customer_id,
-    amount,
-    ROUND(AVG(amount) OVER (PARTITION BY customer_id), 2) AS avg_amount_per_customer
-FROM practice.bookings
-ORDER BY customer_id, booking_id;
-
--- ✅ Solution 3
-SELECT
-    booking_id,
-    booking_date,
-    SUM(amount) OVER (ORDER BY booking_date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
-        AS running_confirmed_revenue
-FROM practice.bookings
-WHERE status = 'confirmed'
-ORDER BY booking_date;
-
--- ✅ Solution 4
-SELECT
-    customer_id,
-    SUM(amount) AS total_confirmed_revenue,
-    RANK() OVER (ORDER BY SUM(amount) DESC) AS revenue_rank
-FROM practice.bookings
-WHERE status = 'confirmed'
-GROUP BY customer_id
-ORDER BY revenue_rank;
-
--- ✅ Solution 5
-SELECT
-    c.country,
-    b.customer_id,
-    SUM(b.amount) AS total_confirmed_revenue,
-    RANK() OVER (
-        PARTITION BY c.country
-        ORDER BY SUM(b.amount) DESC
-    ) AS country_rank
-FROM practice.bookings b
-JOIN practice.customers c
-  ON b.customer_id = c.customer_id
-WHERE b.status = 'confirmed'
-GROUP BY c.country, b.customer_id
-ORDER BY c.country, country_rank;
-
--- ✅ Solution 6
-SELECT
-    customer_id,
-    booking_id,
-    booking_date,
-    LAG(booking_date) OVER (PARTITION BY customer_id ORDER BY booking_date)  AS prev_booking_date,
-    LEAD(booking_date) OVER (PARTITION BY customer_id ORDER BY booking_date) AS next_booking_date
-FROM practice.bookings
-ORDER BY customer_id, booking_date;
-
--- ✅ Solution 7
-SELECT *
-FROM (
-    SELECT
-        *,
-        ROW_NUMBER() OVER (PARTITION BY booking_id ORDER BY booking_date DESC) AS rn
-    FROM practice.bookings
-) t
-WHERE rn = 1;
-
--- ✅ Solution 8
-SELECT *
-FROM (
-    SELECT
-        customer_id,
-        SUM(amount) AS total_confirmed_revenue
-    FROM practice.bookings
-    WHERE status = 'confirmed'
-    GROUP BY customer_id
-) sub
-WHERE total_confirmed_revenue > 400
-ORDER BY total_confirmed_revenue DESC;
-
--- ✅ Solution 9
-WITH monthly AS (
-    SELECT
-        DATE_TRUNC('month', booking_date) AS month_start,
-        SUM(amount) AS revenue
-    FROM practice.bookings
-    WHERE status = 'confirmed'
-    GROUP BY 1
-)
-SELECT
-    month_start,
-    revenue,
-    ROUND(AVG(revenue) OVER (), 2) AS avg_monthly_revenue,
-    CASE
-        WHEN revenue > AVG(revenue) OVER () THEN 'Above average'
-        ELSE 'Below average'
-    END AS comparison
-FROM monthly
-ORDER BY month_start;
-
--- ✅ Solution 10
-SELECT
-    b.customer_id,
-    c.country,
-    COUNT(DISTINCT b.booking_id) AS total_bookings,
-    SUM(b.amount) AS total_revenue,
-    RANK() OVER (ORDER BY SUM(b.amount) DESC) AS revenue_rank
-FROM practice.bookings b
-JOIN practice.customers c
-  ON b.customer_id = c.customer_id
-WHERE b.status = 'confirmed'
-GROUP BY b.customer_id, c.country
-ORDER BY revenue_rank;
-
--- ===========================================================
--- END OF LEVEL 3 SQL PRACTICE
--- ===========================================================
+-- 🧩 Exercise 11:
+-- Business question: "Who are our top customers within each country?"
+-- What do you need to add to the exercise 10 to reach the answer?
+--
+-- Goal:
+--   Rank customers by revenue within their respective countries.
