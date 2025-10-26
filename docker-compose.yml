@@ -4,8 +4,6 @@ services:
     image: postgres:16 # The postgres service is using the "postgres:16" (check in cmd: docker ps)
     container_name: sandbox_postgres  
     restart: unless-stopped # Restart policy for the container 
-    env_file:
-      - .env # In case it doesn't work, try this: ./.env
     ports:
       - "5432:5432" # Maps the container's port 5432 to the host machine's port defined in the .env file
     expose:
