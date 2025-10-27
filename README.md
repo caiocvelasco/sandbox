@@ -1,19 +1,20 @@
-# Sandbox (PostgreSQL Database in a Docker Container)
+# Sandbox (PostgreSQL Database in a Docker Container + Python in Virtual Environment)
 
 ## Table of Contents
 
 - [Project Structure](#project-structure)
 - [Setup Instructions](#setup-instructions)
   - [Prerequisites](#prerequisites)
-  - [Build and Run](#build-and-run)
-- [Services](#services)
-- [Important Notes](#important-notes)
+  - [Build and Run PostgreSQL in Docker](#build-and-run-postgresql-in-docker)
+  - [Build and Run Python and Jupyter Notebook in a Virtual Environment](#build-and-run-python-and-jupyter-notebook-in-a-virtual-environment)
+- [Notes](#notes)
 
 ---
 
 ## Project Structure
 
 - **name_of_your_project_repo (project-root)/**
+  - .venv/ (Python virtual environment))
   - **pgdata/** (PostgreSQL data directory - persisted data - this will be created automatically after your first docker compose up command)
   - **.gitignore**
   - **docker-compose.yml**
@@ -28,12 +29,21 @@
 Make sure you have the following installed on your local computer:
 
 - [Docker](https://www.docker.com/get-started): Platform for building, sharing, and running containers.
-- Create a `.gitignore` file in the project root (sandbox/.gitignore) with:  
+- **Ignoring stuff**: Create a `.gitignore` file in the project root (sandbox/.gitignore) with:  
   - pgdata/ (# Ignore PostgreSQL data directory)
+* [.venv - Virtual Environment](https://docs.python.org/3/library/venv.html)
+  * cd your_repo_folder:
+    * cd "C:\your_repo_folder"
+  * python -m venv .venv           (This will create a virtual environment for the repo folder)
+  * `source .venv/Scripts/activate`  (This will activate your virtual environment)
+  * Install everything you need for your project from the `requirements.txt` file:
+    * make sure to update pip, this is important to avoid conflicts: `python.exe -m pip install --upgrade pip`
+    * `pip install --no-cache-dir -r requirements.txt`  (This will install things inside your virtual environment)
+    * Check: `pip list`
 
 ---
 
-## Build and Run
+## Build and Run PostgreSQL in Docker
 
 1. **Clone the repository:**
 
@@ -113,9 +123,32 @@ Go to "Database" > "New Database Connection" in DBeaver and select "PostgreSQL" 
 
 ---
 
-## Services
+## Build and Run Python and Jupyter Notebook in a Virtual Environment
 
-### **Postgres**
+1. **Activate your virtual environment:**
+
+   ```bash
+   source .venv/Scripts/activate
+   ```
+
+2. **Install required packages:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+
+---
+
+## Notes
+
+A few notes on Docker Compose services defined in the `docker-compose.yml` file:
+
+### General Notes
+
+- The database data **persists between restarts** (stored in `./pgdata`).
+- Use `docker compose down -v` only if you want to reset the database completely.
+
+### Postgres
 
 - Provides a local **PostgreSQL 16** database instance.
 - Data is persisted in the `pgdata/` folder (mounted from your host).
@@ -126,9 +159,7 @@ Go to "Database" > "New Database Connection" in DBeaver and select "PostgreSQL" 
 | **Local (e.g., DBeaver, PowerBI, Tableau)** | `localhost` | `5432` | Connect using the credentials in `.env` |
 | **Inside other Docker containers** | `postgres` | `5432` | Use the service name as hostname (`postgres`) |
 
+
+
 ---
 
-## Important Notes
-
-- The database data **persists between restarts** (stored in `./pgdata`).
-- Use `docker compose down -v` only if you want to reset the database completely.

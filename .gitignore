@@ -3,3 +3,11 @@ pgdata/
 
 # Ignore environment variable files
 .env
+
+# Ignore .venv files
+.venv/
+.venv
+
+# Ignore Python bytecode files
+*.pyc
+__pycache__
